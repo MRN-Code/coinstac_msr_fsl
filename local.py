@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script includes the local computations for single-shot ridge
+This script includes the local computations for multi-shot ridge
 regression with decentralized statistic calculation
 """
 import json
@@ -123,21 +123,18 @@ def local_2(args):
 
 
 def local_3(args):
-    cache_list = args["cache"]
-    X = cache_list["covariates"]
-    y = cache_list["dependents"]
-    y_labels = cache_list["y_labels"]
-    lamb = cache_list["lambda"]
+    X = args["cache"]["covariates"]
+    y = args["cache"]["dependents"]
 
     output_dict = {
         "mean_y_local": args["cache"]["mean_y_local"],
         "count_local": args["cache"]["count_local"],
         "local_stats_list": args["cache"]["local_stats_list"],
-        "y_labels": y_labels,
+        "y_labels": args["cache"]["y_labels"],
         "computation_phase": 'local_3'
     }
 
-    cache_dict = {"covariates": X, "dependents": y, "lambda": lamb}
+    cache_dict = {"covariates": X, "dependents": y}
 
     computation_output = {
         "output": output_dict,
