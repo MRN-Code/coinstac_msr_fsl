@@ -22,15 +22,14 @@ def local_0(args):
     input_list = args["input"]
     lamb = input_list["lambda"]
 
-    (X, y, y_labels) = fsl_parser(args)
+    (X, y) = fsl_parser(args)
 
     output_dict = {"computation_phase": "local_0"}
 
     cache_dict = {
-        "covariates": X.values.tolist(),
-        "dependents": y.values.tolist(),
+        "covariates": X.to_json(),
+        "dependents": y.to_json(),
         "lambda": lamb,
-        "y_labels": y_labels,
     }
 
     computation_output_dict = {
@@ -45,15 +44,12 @@ def local_1(args):
     """Read data from the local sites, perform local regressions and send
     local statistics to the remote site"""
 
-    X = args["cache"]["covariates"]
-    y = args["cache"]["dependents"]
-    y_labels = args["cache"]["y_labels"]
+    X = pd.read_json(args["cache"]["covariates"])
+    y = pd.read_json(args["cache"]["dependents"])
+    y_labels = list(y.columns)
     lamb = args["cache"]["lambda"]
 
-    y = pd.DataFrame(y, columns=y_labels)
-
-    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(
-        X, y, y_labels)
+    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
 
     biased_X = sm.add_constant(X)
 

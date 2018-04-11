@@ -63,7 +63,7 @@ def fsl_parser(args):
     y = pd.DataFrame.from_records(y_list, columns=y_labels)
 
     return (
-        X, y, y_labels
+        X, y
     )  # Ask about labels being available at this level without being passed around
 
 
