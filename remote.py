@@ -42,7 +42,7 @@ def remote_1(args):
     beta2 = 0.999
     eps = 1e-8
     tol = 100  # 0.01
-    eta = 10000  # 0.05
+    eta = 1000  # 0.05
     count = 0
 
     wp = np.zeros((number_of_regressions, beta_vec_size), dtype=float)
@@ -335,7 +335,7 @@ def remote_4(args):
 
 if __name__ == '__main__':
 
-    parsed_args = json.loads(sys.argv[1])
+    parsed_args = json.loads(sys.stdin.read())
     phase_key = list(reg.listRecursive(parsed_args, "computation_phase"))
 
     if "local_0" in phase_key:
