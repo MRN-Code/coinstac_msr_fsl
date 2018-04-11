@@ -11,6 +11,7 @@ import regression as reg
 import warnings
 from parsers import fsl_parser
 import pandas as pd
+from local_ancillary import gather_local_stats
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -23,16 +24,18 @@ def local_0(args):
 
     (X, y, y_labels) = fsl_parser(args)
 
+    output_dict = {"computation_phase": "local_0"}
+
+    cache_dict = {
+        "covariates": X.values.tolist(),
+        "dependents": y.values.tolist(),
+        "lambda": lamb,
+        "y_labels": y_labels,
+    }
+
     computation_output_dict = {
-        "output": {
-            "computation_phase": "local_0"
-        },
-        "cache": {
-            "covariates": X.values.tolist(),
-            "dependents": y.values.tolist(),
-            "lambda": lamb,
-            "y_labels": y_labels,
-        },
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output_dict)
@@ -44,42 +47,15 @@ def local_1(args):
 
     X = args["cache"]["covariates"]
     y = args["cache"]["dependents"]
-    lamb = args["cache"]["lambda"]
     y_labels = args["cache"]["y_labels"]
+    lamb = args["cache"]["lambda"]
+
     y = pd.DataFrame(y, columns=y_labels)
 
+    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(
+        X, y, y_labels)
+
     biased_X = sm.add_constant(X)
-    meanY_vector, lenY_vector = [], []
-
-    local_params = []
-    local_sse = []
-    local_pvalues = []
-    local_tvalues = []
-    local_rsquared = []
-
-    for column in y.columns:
-        curr_y = list(y[column])
-        meanY_vector.append(np.mean(curr_y))
-        lenY_vector.append(len(y))
-
-        # Printing local stats as well
-        model = sm.OLS(curr_y, biased_X.astype(float)).fit()
-        local_params.append(model.params)
-        local_sse.append(model.ssr)
-        local_pvalues.append(model.pvalues)
-        local_tvalues.append(model.tvalues)
-        local_rsquared.append(model.rsquared_adj)
-
-    keys = ["beta", "sse", "pval", "tval", "rsquared"]
-    local_stats_list = []
-    for index, _ in enumerate(y_labels):
-        values = [
-            local_params[index].tolist(), local_sse[index],
-            local_pvalues[index].tolist(), local_tvalues[index].tolist(),
-            local_rsquared[index]
-        ]
-        local_stats_dict = {key: value for key, value in zip(keys, values)}
-        local_stats_list.append(local_stats_dict)
 
     # +++++++++++++++++++++ Adding site covariate columns +++++++++++++++++++++
     site_covar_list = args["input"]["site_covar_list"]
@@ -98,23 +74,27 @@ def local_1(args):
 
     beta_vec_size = biased_X.shape[1]
 
+    output_dict = {
+        "beta_vec_size": beta_vec_size,
+        "number_of_regressions": len(y_labels),
+        "computation_phase": "local_1"
+    }
+
+    cache_dict = {
+        "beta_vec_size": beta_vec_size,
+        "number_of_regressions": len(y_labels),
+        "covariates": biased_X.tolist(),
+        "dependents": y.values.tolist(),
+        "lambda": lamb,
+        "y_labels": y_labels,
+        "mean_y_local": meanY_vector,
+        "count_local": lenY_vector,
+        "local_stats_list": local_stats_list
+    }
+
     computation_output = {
-        "output": {
-            "beta_vec_size": beta_vec_size,
-            "number_of_regressions": len(y_labels),
-            "computation_phase": "local_1"
-        },
-        "cache": {
-            "beta_vec_size": beta_vec_size,
-            "number_of_regressions": len(y_labels),
-            "covariates": biased_X.tolist(),
-            "dependents": y.values.tolist(),
-            "lambda": lamb,
-            "y_labels": y_labels,
-            "mean_y_local": meanY_vector,
-            "count_local": lenY_vector,
-            "local_stats_list": local_stats_list
-        }
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output)
@@ -146,20 +126,24 @@ def local_2(args):
             gradient[i, :] = (
                 1 / len(X)) * np.dot(biased_X.T, np.dot(biased_X, w_) - y_)
 
+    output_dict = {
+        "local_grad": gradient.tolist(),
+        "computation_phase": "local_2"
+    }
+
+    cache_dict = {
+        "covariates": X,
+        "dependents": y.values.tolist(),
+        "lambda": lamb,
+        "y_labels": args["cache"]["y_labels"],
+        "mean_y_local": args["cache"]["mean_y_local"],
+        "count_local": args["cache"]["count_local"],
+        "local_stats_list": args["cache"]["local_stats_list"],
+    }
+
     computation_phase = {
-        "cache": {
-            "covariates": X,
-            "dependents": y.values.tolist(),
-            "lambda": lamb,
-            "y_labels": args["cache"]["y_labels"],
-            "mean_y_local": args["cache"]["mean_y_local"],
-            "count_local": args["cache"]["count_local"],
-            "local_stats_list": args["cache"]["local_stats_list"],
-        },
-        "output": {
-            "local_grad": gradient.tolist(),
-            "computation_phase": "local_2"
-        }
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_phase)
@@ -172,19 +156,19 @@ def local_3(args):
     y_labels = cache_list["y_labels"]
     lamb = cache_list["lambda"]
 
+    output_dict = {
+        "mean_y_local": args["cache"]["mean_y_local"],
+        "count_local": args["cache"]["count_local"],
+        "local_stats_list": args["cache"]["local_stats_list"],
+        "y_labels": y_labels,
+        "computation_phase": 'local_3'
+    }
+
+    cache_dict = {"covariates": X, "dependents": y, "lambda": lamb}
+
     computation_output = {
-        "output": {
-            "mean_y_local": args["cache"]["mean_y_local"],
-            "count_local": args["cache"]["count_local"],
-            "local_stats_list": args["cache"]["local_stats_list"],
-            "y_labels": y_labels,
-            "computation_phase": 'local_3'
-        },
-        "cache": {
-            "covariates": X,
-            "dependents": y,
-            "lambda": lamb
-        }
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output)
@@ -244,14 +228,18 @@ def local_4(args):
 
     varX_matrix_local = np.dot(biased_X.T, biased_X)
 
+    output_dict = {
+        "SSE_local": SSE_local,
+        "SST_local": SST_local,
+        "varX_matrix_local": varX_matrix_local.tolist(),
+        "computation_phase": "local_4"
+    }
+
+    cache_dict = {}
+
     computation_output = {
-        "output": {
-            "SSE_local": SSE_local,
-            "SST_local": SST_local,
-            "varX_matrix_local": varX_matrix_local.tolist(),
-            "computation_phase": "local_4"
-        },
-        "cache": {}
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output)

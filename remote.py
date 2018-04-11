@@ -15,16 +15,20 @@ def remote_0(args):
     input_list = args["input"]
     site_ids = list(input_list.keys())
     site_covar_list = [
-        '{}_{}'.format('site', label)
-        for index, label in enumerate(site_ids) if index
+        '{}_{}'.format('site', label) for index, label in enumerate(site_ids)
+        if index
     ]
 
+    output_dict = {
+        "site_covar_list": site_covar_list,
+        "computation_phase": "remote_0"
+    }
+
+    cache_dict = {}
+
     computation_output_dict = {
-        "output": {
-            "site_covar_list": site_covar_list,
-            "computation_phase": "remote_0"
-        },
-        "cache": {}
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output_dict)
@@ -52,26 +56,30 @@ def remote_1(args):
 
     iter_flag = 1
 
+    output_dict = {
+        "remote_beta": wp.tolist(),
+        "iter_flag": iter_flag,
+        "computation_phase": "remote_1"
+    }
+
+    cache_dict = {
+        "beta1": beta1,
+        "beta2": beta2,
+        "eps": eps,
+        "tol": tol,
+        "eta": eta,
+        "count": count,
+        "wp": wp.tolist(),
+        "wc": wc.tolist(),
+        "mt": mt.tolist(),
+        "vt": vt.tolist(),
+        "iter_flag": iter_flag,
+        "number_of_regressions": number_of_regressions,
+    }
+
     computation_output = {
-        "cache": {
-            "beta1": beta1,
-            "beta2": beta2,
-            "eps": eps,
-            "tol": tol,
-            "eta": eta,
-            "count": count,
-            "wp": wp.tolist(),
-            "wc": wc.tolist(),
-            "mt": mt.tolist(),
-            "vt": vt.tolist(),
-            "iter_flag": iter_flag,
-            "number_of_regressions": number_of_regressions,
-        },
-        "output": {
-            "remote_beta": wp.tolist(),
-            "iter_flag": iter_flag,
-            "computation_phase": "remote_1"
-        }
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output)
@@ -95,14 +103,16 @@ def remote_2(args):
     count = count + 1
 
     if not iter_flag:
+        cache_dict = {"avg_beta_vector": wc.tolist()}
+
+        output_dict = {
+            "avg_beta_vector": wc.tolist(),
+            "computation_phase": "remote_2b"
+        }
+
         computation_output = {
-            "cache": {
-                "avg_beta_vector": wc.tolist()
-            },
-            "output": {
-                "avg_beta_vector": wc.tolist(),
-                "computation_phase": "remote_2b"
-            }
+            "output": output_dict,
+            "cache": cache_dict,
         }
     else:
         input_list = args["input"]
@@ -135,25 +145,29 @@ def remote_2(args):
             if not mask_flag[i]:
                 wp[i] = wc[i]
 
+        output_dict = {
+            "remote_beta": wc.tolist(),
+            "mask_flag": mask_flag.astype(int).tolist(),
+            "computation_phase": "remote_2a"
+        }
+
+        cache_dict = {
+            "beta1": beta1,
+            "beta2": beta2,
+            "eps": eps,
+            "tol": tol,
+            "eta": eta,
+            "count": count,
+            "wp": wp.tolist(),
+            "wc": wc.tolist(),
+            "mt": mt.tolist(),
+            "vt": vt.tolist(),
+            "iter_flag": iter_flag
+        }
+
         computation_output = {
-            "cache": {
-                "beta1": beta1,
-                "beta2": beta2,
-                "eps": eps,
-                "tol": tol,
-                "eta": eta,
-                "count": count,
-                "wp": wp.tolist(),
-                "wc": wc.tolist(),
-                "mt": mt.tolist(),
-                "vt": vt.tolist(),
-                "iter_flag": iter_flag
-            },
-            "output": {
-                "remote_beta": wc.tolist(),
-                "mask_flag": mask_flag.astype(int).tolist(),
-                "computation_phase": "remote_2a"
-            }
+            "output": output_dict,
+            "cache": cache_dict,
         }
 
     return json.dumps(computation_output)
@@ -204,19 +218,23 @@ def remote_3(args):
 
     dof_global = sum(count_y_local) - avg_beta_vector.shape[1]
 
+    output_dict = {
+        "avg_beta_vector": avg_beta_vector.tolist(),
+        "mean_y_global": mean_y_global.tolist(),
+        "computation_phase": "remote_3"
+    }
+
+    cache_dict = {
+        "avg_beta_vector": avg_beta_vector.tolist(),
+        "mean_y_global": mean_y_global.tolist(),
+        "dof_global": dof_global.tolist(),
+        "all_local_stats_dicts": all_local_stats_dicts,
+        "y_labels": args["input"][first_user_id]["y_labels"]
+    }
+
     computation_output = {
-        "output": {
-            "avg_beta_vector": avg_beta_vector.tolist(),
-            "mean_y_global": mean_y_global.tolist(),
-            "computation_phase": "remote_3"
-        },
-        "cache": {
-            "avg_beta_vector": avg_beta_vector.tolist(),
-            "mean_y_global": mean_y_global.tolist(),
-            "dof_global": dof_global.tolist(),
-            "all_local_stats_dicts": all_local_stats_dicts,
-            "y_labels": args["input"][first_user_id]["y_labels"]
-        },
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output)
@@ -307,6 +325,7 @@ def remote_4(args):
         "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global"
     ]
     global_dict_list = []
+
     for index, _ in enumerate(y_labels):
         values = [
             avg_beta_vector[index], r_squared_global[index],
