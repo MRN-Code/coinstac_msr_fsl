@@ -67,6 +67,10 @@ def add_site_covariates(args, X):
     ]
 
     site_df[select_cols] = 1
-    biased_X = np.concatenate((biased_X, site_df.values), axis=1)
+
+    biased_X.reset_index(drop=True, inplace=True)
+    site_df.reset_index(drop=True, inplace=True)
+
+    biased_X = pd.concat([biased_X, site_df], axis=1)
 
     return biased_X
