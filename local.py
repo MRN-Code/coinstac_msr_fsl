@@ -58,7 +58,7 @@ def local_1(args):
     cache_dict = {
         "beta_vec_size": beta_vec_size,
         "number_of_regressions": len(y_labels),
-        "covariates": biased_X.values.tolist(),
+        "covariates": biased_X.to_json(),
         "dependents": y.values.tolist(),
         "y_labels": y_labels,
         "mean_y_local": meanY_vector,
@@ -75,7 +75,7 @@ def local_1(args):
 
 
 def local_2(args):
-    X = args["cache"]["covariates"]
+    X = pd.read_json(args["cache"]["covariates"])
     y = args["cache"]["dependents"]
 
     beta_vec_size = args["cache"]["beta_vec_size"]
