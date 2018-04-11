@@ -112,9 +112,6 @@ def local_2(args):
         "dependents": y.values.tolist(),
         "lambda": lamb,
         "y_labels": args["cache"]["y_labels"],
-        "mean_y_local": args["cache"]["mean_y_local"],
-        "count_local": args["cache"]["count_local"],
-        "local_stats_list": args["cache"]["local_stats_list"],
     }
 
     computation_phase = {
