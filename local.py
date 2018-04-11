@@ -8,14 +8,9 @@ import json
 import numpy as np
 import sys
 import regression as reg
-import warnings
 from parsers import fsl_parser
 import pandas as pd
-from local_ancillary import gather_local_stats
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import statsmodels.api as sm
+from local_ancillary import gather_local_stats, add_site_covariates
 
 
 def local_0(args):
@@ -51,22 +46,7 @@ def local_1(args):
 
     meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
 
-    biased_X = sm.add_constant(X)
-
-    # +++++++++++++++++++++ Adding site covariate columns +++++++++++++++++++++
-    site_covar_list = args["input"]["site_covar_list"]
-
-    site_matrix = np.zeros(
-        (np.array(X).shape[0], len(site_covar_list)), dtype=int)
-    site_df = pd.DataFrame(site_matrix, columns=site_covar_list)
-
-    select_cols = [
-        col for col in site_df.columns if args["state"]["clientId"] in col
-    ]
-
-    site_df[select_cols] = 1
-    biased_X = np.concatenate((biased_X, site_df.values), axis=1)
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    biased_X = add_site_covariates(args, X)
 
     beta_vec_size = biased_X.shape[1]
 

@@ -6,6 +6,7 @@ Created on Wed Apr 11 10:00:16 2018
 @author: Harshvardhan
 """
 import numpy as np
+import pandas as pd
 import warnings
 
 with warnings.catch_warnings():
@@ -51,3 +52,21 @@ def gather_local_stats(X, y):
         local_stats_list.append(local_stats_dict)
 
     return meanY_vector, lenY_vector, local_stats_list
+
+
+def add_site_covariates(args, X):
+    biased_X = sm.add_constant(X)
+    site_covar_list = args["input"]["site_covar_list"]
+
+    site_matrix = np.zeros(
+        (np.array(X).shape[0], len(site_covar_list)), dtype=int)
+    site_df = pd.DataFrame(site_matrix, columns=site_covar_list)
+
+    select_cols = [
+        col for col in site_df.columns if args["state"]["clientId"] in col
+    ]
+
+    site_df[select_cols] = 1
+    biased_X = np.concatenate((biased_X, site_df.values), axis=1)
+
+    return biased_X
