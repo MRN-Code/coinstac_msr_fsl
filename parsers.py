@@ -51,16 +51,16 @@ def fsl_parser(args):
 
     X = X_df[X_labels]
     X = X.apply(pd.to_numeric, errors='ignore')
-    X = pd.get_dummies(X, drop_first=True)
-
-#    X.isControl = X.isControl.astype(int)  # need to generalize this line
-    X = X * 1  # converts booleans to int (a replacement to the very specific and dumb above line of code)
+#    X = pd.get_dummies(X, drop_first=True)
+    X = X * 1  # converts booleans to int
 
     y_files = y_info[0]
     y_labels = y_info[2]
 
     y_list = parse_for_y_array(args, X_files, y_files, y_labels)
     y = pd.DataFrame.from_records(y_list, columns=y_labels)
+
+    X = X.reindex_axis(sorted(X.columns), axis=1)
 
     return (X, y)  # Ask about labels being available at this level without being passed around
 
