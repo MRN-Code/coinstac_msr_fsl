@@ -49,10 +49,10 @@ def remote_1(args):
     eta = 1000  # 0.05
     count = 0
 
-    wp = np.zeros((number_of_regressions, beta_vec_size), dtype=float)
-    wc = np.zeros((number_of_regressions, beta_vec_size), dtype=float)
-    mt = np.zeros((number_of_regressions, beta_vec_size), dtype=float)
-    vt = np.zeros((number_of_regressions, beta_vec_size), dtype=float)
+    wp, wc, mt, vt = [
+        np.zeros((number_of_regressions, beta_vec_size), dtype=float)
+        for _ in range(4)
+    ]
 
     iter_flag = 1
 
@@ -152,11 +152,6 @@ def remote_2(args):
         }
 
         cache_dict = {
-            "beta1": beta1,
-            "beta2": beta2,
-            "eps": eps,
-            "tol": tol,
-            "eta": eta,
             "count": count,
             "wp": wp.tolist(),
             "wc": wc.tolist(),

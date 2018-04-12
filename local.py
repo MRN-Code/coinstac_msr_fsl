@@ -1,36 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script includes the local computations for single-shot ridge
+This script includes the local computations for multi-shot ridge
 regression with decentralized statistic calculation
 """
 import json
 import numpy as np
 import sys
 import regression as reg
-import warnings
 from parsers import fsl_parser
 import pandas as pd
-from local_ancillary import gather_local_stats
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import statsmodels.api as sm
+from local_ancillary import gather_local_stats, add_site_covariates
 
 
 def local_0(args):
     input_list = args["input"]
     lamb = input_list["lambda"]
 
-    (X, y, y_labels) = fsl_parser(args)
+    (X, y) = fsl_parser(args)
 
     output_dict = {"computation_phase": "local_0"}
 
     cache_dict = {
-        "covariates": X.values.tolist(),
-        "dependents": y.values.tolist(),
+        "covariates": X.to_json(),
+        "dependents": y.to_json(),
         "lambda": lamb,
-        "y_labels": y_labels,
     }
 
     computation_output_dict = {
@@ -45,34 +39,15 @@ def local_1(args):
     """Read data from the local sites, perform local regressions and send
     local statistics to the remote site"""
 
-    X = args["cache"]["covariates"]
-    y = args["cache"]["dependents"]
-    y_labels = args["cache"]["y_labels"]
-    lamb = args["cache"]["lambda"]
+    X = pd.read_json(args["cache"]["covariates"])
+    y = pd.read_json(args["cache"]["dependents"])
+    y_labels = list(y.columns)
 
-    y = pd.DataFrame(y, columns=y_labels)
+    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
 
-    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(
-        X, y, y_labels)
+    augmented_X = add_site_covariates(args, X)
 
-    biased_X = sm.add_constant(X)
-
-    # +++++++++++++++++++++ Adding site covariate columns +++++++++++++++++++++
-    site_covar_list = args["input"]["site_covar_list"]
-
-    site_matrix = np.zeros(
-        (np.array(X).shape[0], len(site_covar_list)), dtype=int)
-    site_df = pd.DataFrame(site_matrix, columns=site_covar_list)
-
-    select_cols = [
-        col for col in site_df.columns if args["state"]["clientId"] in col
-    ]
-
-    site_df[select_cols] = 1
-    biased_X = np.concatenate((biased_X, site_df.values), axis=1)
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    beta_vec_size = biased_X.shape[1]
+    beta_vec_size = augmented_X.shape[1]
 
     output_dict = {
         "beta_vec_size": beta_vec_size,
@@ -83,9 +58,7 @@ def local_1(args):
     cache_dict = {
         "beta_vec_size": beta_vec_size,
         "number_of_regressions": len(y_labels),
-        "covariates": biased_X.tolist(),
-        "dependents": y.values.tolist(),
-        "lambda": lamb,
+        "covariates": augmented_X.to_json(),
         "y_labels": y_labels,
         "mean_y_local": meanY_vector,
         "count_local": lenY_vector,
@@ -101,10 +74,8 @@ def local_1(args):
 
 
 def local_2(args):
-
-    X = args["cache"]["covariates"]
-    y = args["cache"]["dependents"]
-    lamb = args["cache"]["lambda"]
+    X = pd.read_json(args["cache"]["covariates"])
+    y = pd.read_json(args["cache"]["dependents"])
 
     beta_vec_size = args["cache"]["beta_vec_size"]
     number_of_regressions = args["cache"]["number_of_regressions"]
@@ -113,7 +84,7 @@ def local_2(args):
                                   np.zeros(number_of_regressions, dtype=bool))
 
     biased_X = np.array(X)
-    y = pd.DataFrame(y)
+    y = pd.DataFrame(y.values)
 
     w = args["input"]["remote_beta"]
 
@@ -131,15 +102,7 @@ def local_2(args):
         "computation_phase": "local_2"
     }
 
-    cache_dict = {
-        "covariates": X,
-        "dependents": y.values.tolist(),
-        "lambda": lamb,
-        "y_labels": args["cache"]["y_labels"],
-        "mean_y_local": args["cache"]["mean_y_local"],
-        "count_local": args["cache"]["count_local"],
-        "local_stats_list": args["cache"]["local_stats_list"],
-    }
+    cache_dict = {}
 
     computation_phase = {
         "output": output_dict,
@@ -150,21 +113,16 @@ def local_2(args):
 
 
 def local_3(args):
-    cache_list = args["cache"]
-    X = cache_list["covariates"]
-    y = cache_list["dependents"]
-    y_labels = cache_list["y_labels"]
-    lamb = cache_list["lambda"]
 
     output_dict = {
         "mean_y_local": args["cache"]["mean_y_local"],
         "count_local": args["cache"]["count_local"],
         "local_stats_list": args["cache"]["local_stats_list"],
-        "y_labels": y_labels,
+        "y_labels": args["cache"]["y_labels"],
         "computation_phase": 'local_3'
     }
 
-    cache_dict = {"covariates": X, "dependents": y, "lambda": lamb}
+    cache_dict = {}
 
     computation_output = {
         "output": output_dict,
@@ -208,14 +166,13 @@ def local_4(args):
     cache_list = args["cache"]
     input_list = args["input"]
 
-    X = cache_list["covariates"]
-    y = cache_list["dependents"]
+    X = pd.read_json(cache_list["covariates"])
+    y = pd.read_json(cache_list["dependents"])
     biased_X = np.array(X)
 
     avg_beta_vector = input_list["avg_beta_vector"]
     mean_y_global = input_list["mean_y_global"]
 
-    y = pd.DataFrame(y)
     SSE_local, SST_local = [], []
     for index, column in enumerate(y.columns):
         curr_y = y[column].values
