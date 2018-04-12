@@ -71,6 +71,6 @@ def add_site_covariates(args, X):
     biased_X.reset_index(drop=True, inplace=True)
     site_df.reset_index(drop=True, inplace=True)
 
-    biased_X = pd.concat([biased_X, site_df], axis=1)
+    augmented_X = pd.concat([biased_X, site_df], axis=1)
 
-    return biased_X
+    return augmented_X
