@@ -22,8 +22,8 @@ def local_0(args):
     output_dict = {"computation_phase": "local_0"}
 
     cache_dict = {
-        "covariates": X.to_json(),
-        "dependents": y.to_json(),
+        "covariates": X.to_json(orient='records'),
+        "dependents": y.to_json(orient='records'),
         "lambda": lamb,
     }
 
@@ -39,8 +39,8 @@ def local_1(args):
     """Read data from the local sites, perform local regressions and send
     local statistics to the remote site"""
 
-    X = pd.read_json(args["cache"]["covariates"])
-    y = pd.read_json(args["cache"]["dependents"])
+    X = pd.read_json(args["cache"]["covariates"], orient='records')
+    y = pd.read_json(args["cache"]["dependents"], orient='records')
     y_labels = list(y.columns)
 
     meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
@@ -58,7 +58,7 @@ def local_1(args):
     cache_dict = {
         "beta_vec_size": beta_vec_size,
         "number_of_regressions": len(y_labels),
-        "covariates": augmented_X.to_json(),
+        "covariates": augmented_X.to_json(orient='records'),
         "y_labels": y_labels,
         "mean_y_local": meanY_vector,
         "count_local": lenY_vector,
@@ -74,8 +74,8 @@ def local_1(args):
 
 
 def local_2(args):
-    X = pd.read_json(args["cache"]["covariates"])
-    y = pd.read_json(args["cache"]["dependents"])
+    X = pd.read_json(args["cache"]["covariates"], orient='records')
+    y = pd.read_json(args["cache"]["dependents"], orient='records')
 
     beta_vec_size = args["cache"]["beta_vec_size"]
     number_of_regressions = args["cache"]["number_of_regressions"]
@@ -166,8 +166,8 @@ def local_4(args):
     cache_list = args["cache"]
     input_list = args["input"]
 
-    X = pd.read_json(cache_list["covariates"])
-    y = pd.read_json(cache_list["dependents"])
+    X = pd.read_json(cache_list["covariates"], orient='records')
+    y = pd.read_json(cache_list["dependents"], orient='records')
     biased_X = np.array(X)
 
     avg_beta_vector = input_list["avg_beta_vector"]
