@@ -10,28 +10,19 @@ import pandas as pd
 import nibabel as nib
 
 
-def parse_for_each_y(args, X_files, y_files, dependent):
-    y = []
+def parse_for_y(args, X_files, y_files, y_labels):
+    y = pd.DataFrame(index=y_labels)
+
     for file in y_files:
-        if file.split('-')[-1] in X_files:
-            with open(
-                    os.path.join(args["state"]["baseDirectory"],
-                                 file)) as fh:
-                for line in fh:
-                    if line.startswith(dependent[0]):
-                        y.append(float(line.split('\t')[1]))
+        if file in X_files:
+            y_ = pd.read_csv(
+                os.path.join(args["state"]["baseDirectory"], file), sep='\t')
+            y_.set_index('Measure:volume', inplace=True)
+            y = pd.merge(y, y_, how='left', left_index=True, right_index=True)
+
+    y = y.T
 
     return y
-
-
-def parse_for_y_array(args, X_files, y_files, y_labels):
-    y_array = []
-    for region in y_labels:
-        y_array.append(parse_for_each_y(args, X_files, y_files, region))
-
-    y_array = list(map(list, zip(*y_array)))
-
-    return y_array
 
 
 def fsl_parser(args):
@@ -41,28 +32,28 @@ def fsl_parser(args):
 
     X_data = X_info[0][0]
     X_labels = X_info[1]
-#    X_types = X_info[2]
+    X_types = X_info[2]
 
     X_df = pd.DataFrame.from_records(X_data)
+
     X_df.columns = X_df.iloc[0]
     X_df = X_df.reindex(X_df.index.drop(0))
-
     X_files = list(X_df['freesurferfile'])
 
     X = X_df[X_labels]
     X = X.apply(pd.to_numeric, errors='ignore')
-#    X = pd.get_dummies(X, drop_first=True)
-    X = X * 1  # converts booleans to int
+    X = X * 1
 
     y_files = y_info[0]
     y_labels = y_info[2]
 
-    y_list = parse_for_y_array(args, X_files, y_files, y_labels)
-    y = pd.DataFrame.from_records(y_list, columns=y_labels)
+    y = parse_for_y(args, X_files, y_files, y_labels)
 
-    X = X.reindex_axis(sorted(X.columns), axis=1)
+    X = X.reindex(sorted(X.columns), axis=1)
 
-    return (X, y)  # Ask about labels being available at this level without being passed around
+    return (
+        X, y
+    )  # Ask about labels being available at this level without being passed around
 
 
 def nifti_to_data(args, X_files, y_files):
@@ -106,7 +97,6 @@ def vbm_parser(args):
     y_list = nifti_to_data(args, X_files, y_files)
     y = pd.DataFrame.from_records(y_list)
 
-#    X.isControl = X.isControl.astype(int)  # need to generalize this line
     X = X * 1
 
     return (X, y)
