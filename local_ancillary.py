@@ -5,13 +5,12 @@ Created on Wed Apr 11 10:00:16 2018
 
 @author: Harshvardhan
 """
+import warnings
+warnings.simplefilter("ignore")
+
 import numpy as np
 import pandas as pd
-import warnings
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import statsmodels.api as sm
+import statsmodels.api as sm
 
 
 def gather_local_stats(X, y):

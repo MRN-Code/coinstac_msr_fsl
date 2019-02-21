@@ -4,7 +4,10 @@
 This script includes the local computations for multi-shot ridge
 regression with decentralized statistic calculation
 """
-import json
+import warnings
+warnings.simplefilter("ignore")
+
+import ujson as json
 import numpy as np
 import sys
 import regression as reg
