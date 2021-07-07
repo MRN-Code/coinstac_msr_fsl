@@ -11,8 +11,8 @@ import ujson as json
 import numpy as np
 import sys
 import regression as reg
-import fslparser
-from fslparser import parsers
+import coinstacparsers
+from coinstacparsers import parsers
 import pandas as pd
 from local_ancillary import gather_local_stats, add_site_covariates
 
