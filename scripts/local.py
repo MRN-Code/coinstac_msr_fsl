@@ -11,7 +11,8 @@ import ujson as json
 import numpy as np
 import sys
 import regression as reg
-from parsers import fsl_parser
+import fslparser
+from fslparser import parsers
 import pandas as pd
 from local_ancillary import gather_local_stats, add_site_covariates
 
@@ -20,7 +21,7 @@ def local_0(args):
     input_list = args["input"]
     lamb = input_list["lambda"]
 
-    (X, y) = fsl_parser(args)
+    (X, y) = parsers.fsl_parser(args)
 
     output_dict = {"computation_phase": "local_0"}
 
