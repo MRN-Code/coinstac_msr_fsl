@@ -45,8 +45,8 @@ def remote_1(args):
     beta1 = 0.9
     beta2 = 0.999
     eps = 1e-8
-    tol = 100  # 0.01
-    eta = 1000  # 0.05
+    tol = 1e-8  # 0.01
+    eta = 1e-5  # 0.05
     count = 0
 
     wp, wc, mt, vt = [
