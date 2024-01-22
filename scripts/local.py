@@ -23,12 +23,20 @@ def local_0(args):
 
     (X, y) = parsers.fsl_parser(args)
 
-    output_dict = {"computation_phase": "local_0"}
+    tol = input_list["tol"]
+    eta = input_list["eta"]
+    max_iter = input_list["max_iter"]
+
+    output_dict = {"computation_phase": "local_0",
+                   "tol": tol,
+                   "eta": eta
+                   }
 
     cache_dict = {
         "covariates": X.to_json(orient='records'),
         "dependents": y.to_json(orient='records'),
         "lambda": lamb,
+        "max_iter": max_iter,
     }
 
     computation_output_dict = {
@@ -66,7 +74,8 @@ def local_1(args):
         "y_labels": y_labels,
         "mean_y_local": meanY_vector,
         "count_local": lenY_vector,
-        "local_stats_list": local_stats_list
+        "local_stats_list": local_stats_list,
+        "max_iter": args["cache"]["max_iter"]
     }
 
     computation_output = {
@@ -106,7 +115,7 @@ def local_2(args):
         "computation_phase": "local_2"
     }
 
-    cache_dict = {}
+    cache_dict = {"max_iter": args["cache"]["max_iter"]}
 
     computation_phase = {
         "output": output_dict,

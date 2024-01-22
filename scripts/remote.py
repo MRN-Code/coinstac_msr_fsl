@@ -19,12 +19,19 @@ def remote_0(args):
         if index
     ]
 
+    site_id=site_ids[0]
+    tol = input_list[site_id]["tol"]
+    eta = input_list[site_id]["eta"]
+
     output_dict = {
         "site_covar_list": site_covar_list,
         "computation_phase": "remote_0"
     }
 
-    cache_dict = {}
+    cache_dict = {
+        "tol": tol,
+        "eta": eta
+    }
 
     computation_output_dict = {
         "output": output_dict,
@@ -45,9 +52,10 @@ def remote_1(args):
     beta1 = 0.9
     beta2 = 0.999
     eps = 1e-8
-    tol = 100  # 0.01
-    eta = 1000  # 0.05
     count = 0
+
+    tol = args["cache"]["tol"]
+    eta = args["cache"]["eta"]
 
     wp, wc, mt, vt = [
         np.zeros((number_of_regressions, beta_vec_size), dtype=float)

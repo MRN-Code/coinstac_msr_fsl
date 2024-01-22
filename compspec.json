@@ -43,6 +43,27 @@
         "items": ["FreeSurfer"],
         "extensions": ["csv", "txt"],
         "source": "owner"
+      },
+      "tol": {
+        "default": 100,
+        "label": "Tolerance",
+        "tooltip": "Tolerance inital parameter setting for regression convergence",
+        "type": "number",
+        "source": "owner"
+      },
+      "eta": {
+        "default": 1000,
+        "label": "ETA",
+        "tooltip": "ETA inital parameter setting for regression convergence",
+        "type": "number",
+        "source": "owner"
+      },
+      "max_iter": {
+        "default": 1000,
+        "label": "MaxIterations",
+        "tooltip": "Maximum number of iterations to allow for converging",
+        "type": "number",
+        "source": "owner"
       }
     },
     "output": {

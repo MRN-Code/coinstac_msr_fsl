@@ -309,6 +309,18 @@
   "lambda":{
     "fulfilled":true,
     "value":1
+  },
+  "tol": {
+    "fulfilled": true,
+    "value": 100
+  },
+  "eta": {
+    "fulfilled": true,
+    "value": 1000
+  },
+  "max_iter": {
+    "fulfilled": true,
+    "value": 1000
   }
 },
 {
@@ -529,6 +541,18 @@
   "lambda":{
     "fulfilled":true,
     "value":1
+  },
+  "tol": {
+    "fulfilled": true,
+    "value": 100
+  },
+  "eta": {
+    "fulfilled": true,
+    "value": 1000
+  },    
+  "max_iter": {
+    "fulfilled": true,
+    "value": 1000
   }
 },
 {
@@ -949,6 +973,18 @@
   "lambda":{
     "fulfilled":true,
     "value":1
+  },
+  "tol": {
+    "fulfilled": true,
+    "value": 100
+  },
+  "eta": {
+    "fulfilled": true,
+    "value": 1000
+  },    
+  "max_iter": {
+    "fulfilled": true,
+    "value": 1000
   }
 },
 {
@@ -1289,6 +1325,18 @@
   "lambda":{
     "fulfilled":true,
     "value":1
+  },
+  "tol": {
+    "fulfilled": true,
+    "value": 100
+  },
+  "eta": {
+    "fulfilled": true,
+    "value": 1000
+  },    
+  "max_iter": {
+    "fulfilled": true,
+    "value": 1000
   }
 },
 {
@@ -1789,6 +1837,18 @@
   "lambda":{
     "fulfilled":true,
     "value":1
+  },
+  "tol": {
+    "fulfilled": true,
+    "value": 100
+  },
+  "eta": {
+    "fulfilled": true,
+    "value": 1000
+  },    
+  "max_iter": {
+    "fulfilled": true,
+    "value": 1000
   }
 }
 ]
