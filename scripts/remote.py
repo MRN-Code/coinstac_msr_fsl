@@ -9,7 +9,7 @@ import sys
 import scipy as sp
 import numpy as np
 import regression as reg
-
+import utils as ut
 
 def remote_0(args):
     input_list = args["input"]
@@ -44,7 +44,8 @@ def remote_0(args):
 def remote_1(args):
     """Need this function for performing multi-shot regression"""
     input_list = args["input"]
-    first_user_id = list(input_list.keys())[0]
+
+    first_user_id = sorted(list(input_list.keys()))[0]
     beta_vec_size = input_list[first_user_id]["beta_vec_size"]
     number_of_regressions = input_list[first_user_id]["number_of_regressions"]
 
@@ -124,16 +125,18 @@ def remote_2(args):
         }
     else:
         input_list = args["input"]
+        sorted_site_ids = sorted(list(input_list.keys()))
+
         if len(input_list) == 1:
             grad_remote = [
                 np.array(args["input"][site]["local_grad"])
-                for site in input_list
+                for site in sorted_site_ids
             ]
             grad_remote = grad_remote[0]
         else:
             grad_remote = sum([
                 np.array(args["input"][site]["local_grad"])
-                for site in input_list
+                for site in sorted_site_ids
             ])
 
         mt = beta1 * np.array(mt) + (1 - beta1) * grad_remote
@@ -204,17 +207,19 @@ def remote_3(args):
 
     """
     input_list = args["input"]
-    first_user_id = list(input_list)[0]
+
+    sorted_site_ids = sorted(list(input_list.keys()))
+    first_user_id = sorted_site_ids[0]
 
     avg_beta_vector = np.array(args["cache"]["avg_beta_vector"])
 
+    ut.log(f'\nAll remote input local stats: {str(input_list)} ', args["state"])
     all_local_stats_dicts = [
-        input_list[site]["local_stats_list"] for site in input_list
+        input_list[site]["local_stats_list"] for site in sorted_site_ids
     ]
-
-    mean_y_local = [input_list[site]["mean_y_local"] for site in input_list]
+    mean_y_local = [input_list[site]["mean_y_local"] for site in sorted_site_ids]
     count_y_local = [
-        np.array(input_list[site]["count_local"]) for site in input_list
+        np.array(input_list[site]["count_local"]) for site in sorted_site_ids
     ]
     mean_y_global = np.array(mean_y_local) * np.array(count_y_local)
     mean_y_global = np.average(mean_y_global, axis=0)
@@ -284,6 +289,7 @@ def remote_4(args):
 
     """
     input_list = args["input"]
+    sorted_site_ids = sorted(list(input_list.keys()))
     y_labels = args["cache"]["y_labels"]
     all_local_stats_dicts = args["cache"]["all_local_stats_dicts"]
 
@@ -292,11 +298,11 @@ def remote_4(args):
     dof_global = cache_list["dof_global"]
 
     SSE_global = sum(
-        [np.array(input_list[site]["SSE_local"]) for site in input_list])
+        [np.array(input_list[site]["SSE_local"]) for site in sorted_site_ids])
     SST_global = sum(
-        [np.array(input_list[site]["SST_local"]) for site in input_list])
+        [np.array(input_list[site]["SST_local"]) for site in sorted_site_ids])
     varX_matrix_global = sum([
-        np.array(input_list[site]["varX_matrix_local"]) for site in input_list
+        np.array(input_list[site]["varX_matrix_local"]) for site in sorted_site_ids
     ])
 
     r_squared_global = 1 - (SSE_global / SST_global)
@@ -313,15 +319,19 @@ def remote_4(args):
         ts_global.append(ts)
         ps_global.append(ps)
 
+    ut.log(f'\nremote_4 BEFORE All remote input local stats: \n{str(all_local_stats_dicts)} ', args["state"])
+
     # Block of code to print local stats as well
     sites = ['Site_' + str(i) for i in range(len(all_local_stats_dicts))]
 
     all_local_stats_dicts = list(map(list, zip(*all_local_stats_dicts)))
+    ut.log(f'\nremote_4 BETWEEN  All remote input local stats: \n{str(all_local_stats_dicts)} ', args["state"])
 
     a_dict = [{
         key: value
         for key, value in zip(sites, all_local_stats_dicts[i])
     } for i in range(len(all_local_stats_dicts))]
+    ut.log(f'\nremote_4 AFTER  All remote input local stats: \n{str(a_dict)} ', args["state"])
 
     # Block of code to print just global stats
     keys1 = [

@@ -15,7 +15,7 @@ import coinstacparsers
 from coinstacparsers import parsers
 import pandas as pd
 from local_ancillary import gather_local_stats, add_site_covariates
-
+import utils as ut
 
 def local_0(args):
     input_list = args["input"]
@@ -56,7 +56,7 @@ def local_1(args):
     y_labels = list(y.columns)
 
     meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
-
+    ut.log(f'\nlocal stats: {str(local_stats_list)} ', args["state"])
     augmented_X = add_site_covariates(args, X)
 
     beta_vec_size = augmented_X.shape[1]
