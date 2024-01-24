@@ -18,6 +18,7 @@ def gather_local_stats(X, y):
     y_labels = list(y.columns)
     biased_X = sm.add_constant(X)
     meanY_vector, lenY_vector = [], []
+    X_labels = list(biased_X.columns)
 
     local_params = []
     local_sse = []
@@ -38,14 +39,14 @@ def gather_local_stats(X, y):
         local_tvalues.append(model.tvalues)
         local_rsquared.append(model.rsquared_adj)
 
-    keys = ["beta", "sse", "pval", "tval", "rsquared"]
+    keys = ["beta", "sse", "pval", "tval", "rsquared", "covariate_labels"]
     local_stats_list = []
 
     for index, _ in enumerate(y_labels):
         values = [
             local_params[index].tolist(), local_sse[index],
             local_pvalues[index].tolist(), local_tvalues[index].tolist(),
-            local_rsquared[index]
+            local_rsquared[index], list(X_labels)
         ]
         local_stats_dict = {key: value for key, value in zip(keys, values)}
         local_stats_list.append(local_stats_dict)

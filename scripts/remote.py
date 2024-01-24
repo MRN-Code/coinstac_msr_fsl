@@ -13,9 +13,9 @@ import utils as ut
 
 def remote_0(args):
     input_list = args["input"]
-    site_ids = list(input_list.keys())
+    site_ids = sorted(list(input_list.keys()))
     site_covar_list = [
-        '{}_{}'.format('site', label) for index, label in enumerate(site_ids)
+        f'site_{label}' for index, label in enumerate(site_ids)
         if index
     ]
 
@@ -48,6 +48,7 @@ def remote_1(args):
     first_user_id = sorted(list(input_list.keys()))[0]
     beta_vec_size = input_list[first_user_id]["beta_vec_size"]
     number_of_regressions = input_list[first_user_id]["number_of_regressions"]
+    X_labels = input_list[first_user_id]["X_labels"]
 
     # Initial setup
     beta1 = 0.9
@@ -84,6 +85,7 @@ def remote_1(args):
         "vt": vt.tolist(),
         "iter_flag": iter_flag,
         "number_of_regressions": number_of_regressions,
+        "X_labels": X_labels,
     }
 
     computation_output = {
@@ -112,7 +114,8 @@ def remote_2(args):
     count = count + 1
 
     if not iter_flag:
-        cache_dict = {"avg_beta_vector": wc.tolist()}
+        cache_dict = {"avg_beta_vector": wc.tolist(),
+            "X_labels": args["cache"]["X_labels"]}
 
         output_dict = {
             "avg_beta_vector": wc.tolist(),
@@ -168,7 +171,8 @@ def remote_2(args):
             "wc": wc.tolist(),
             "mt": mt.tolist(),
             "vt": vt.tolist(),
-            "iter_flag": iter_flag
+            "iter_flag": iter_flag,
+            "X_labels": args["cache"]["X_labels"]
         }
 
         computation_output = {
@@ -237,7 +241,8 @@ def remote_3(args):
         "mean_y_global": mean_y_global.tolist(),
         "dof_global": dof_global.tolist(),
         "all_local_stats_dicts": all_local_stats_dicts,
-        "y_labels": args["input"][first_user_id]["y_labels"]
+        "y_labels": args["input"][first_user_id]["y_labels"],
+        "X_labels": args["cache"]["X_labels"]
     }
 
     computation_output = {
@@ -325,7 +330,7 @@ def remote_4(args):
     sites = ['Site_' + str(i) for i in range(len(all_local_stats_dicts))]
 
     all_local_stats_dicts = list(map(list, zip(*all_local_stats_dicts)))
-    ut.log(f'\nremote_4 BETWEEN  All remote input local stats: \n{str(all_local_stats_dicts)} ', args["state"])
+    #ut.log(f'\nremote_4 BETWEEN  All remote input local stats: \n{str(all_local_stats_dicts)} ', args["state"])
 
     a_dict = [{
         key: value
@@ -335,17 +340,19 @@ def remote_4(args):
 
     # Block of code to print just global stats
     keys1 = [
-        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global"
+        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global", "covariate_labels"
     ]
     global_dict_list = []
 
     for index, _ in enumerate(y_labels):
         values = [
             avg_beta_vector[index], r_squared_global[index],
-            ts_global[index].tolist(), ps_global[index], dof_global[index]
+            ts_global[index].tolist(), ps_global[index], dof_global[index], list(args["cache"]["X_labels"])
         ]
         my_dict = {key: value for key, value in zip(keys1, values)}
         global_dict_list.append(my_dict)
+
+    ut.log(f'\nglobal stats dict: \n{str(global_dict_list)} ', args["state"])
 
     # Print Everything
     dict_list = []

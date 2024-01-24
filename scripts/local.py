@@ -56,13 +56,15 @@ def local_1(args):
     y_labels = list(y.columns)
 
     meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
-    ut.log(f'\nlocal stats: {str(local_stats_list)} ', args["state"])
+    ut.log(f'\nlocal stats list: {str(local_stats_list)} ', args["state"])
     augmented_X = add_site_covariates(args, X)
 
     beta_vec_size = augmented_X.shape[1]
+    X_labels = list(augmented_X.columns)
 
     output_dict = {
         "beta_vec_size": beta_vec_size,
+        "X_labels": X_labels,
         "number_of_regressions": len(y_labels),
         "computation_phase": "local_1"
     }
