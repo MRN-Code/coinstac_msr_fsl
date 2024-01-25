@@ -15,9 +15,9 @@ def remote_0(args):
     input_list = args["input"]
     site_ids = sorted(list(input_list.keys()))
     site_covar_list = [
-        f'site_{label}' for index, label in enumerate(site_ids)
+        f'{label}' for index, label in enumerate(site_ids)
         if index
-    ]
+    ]  
 
     site_id=site_ids[0]
     tol = input_list[site_id]["tol"]
@@ -218,9 +218,9 @@ def remote_3(args):
     avg_beta_vector = np.array(args["cache"]["avg_beta_vector"])
 
     ut.log(f'\nAll remote input local stats: {str(input_list)} ', args["state"])
-    all_local_stats_dicts = [
-        input_list[site]["local_stats_list"] for site in sorted_site_ids
-    ]
+    all_local_stats_dicts = [{
+        site: input_list[site]["local_stats_list"] for site in sorted_site_ids
+    }]
     mean_y_local = [input_list[site]["mean_y_local"] for site in sorted_site_ids]
     count_y_local = [
         np.array(input_list[site]["count_local"]) for site in sorted_site_ids
@@ -326,16 +326,16 @@ def remote_4(args):
 
     ut.log(f'\nremote_4 BEFORE All remote input local stats: \n{str(all_local_stats_dicts)} ', args["state"])
 
-    # Block of code to print local stats as well
-    sites = ['Site_' + str(i) for i in range(len(all_local_stats_dicts))]
+    keys = list(all_local_stats_dicts[0].keys())
 
-    all_local_stats_dicts = list(map(list, zip(*all_local_stats_dicts)))
-    #ut.log(f'\nremote_4 BETWEEN  All remote input local stats: \n{str(all_local_stats_dicts)} ', args["state"])
+    a_dict = []
 
-    a_dict = [{
-        key: value
-        for key, value in zip(sites, all_local_stats_dicts[i])
-    } for i in range(len(all_local_stats_dicts))]
+    for i in range(len(all_local_stats_dicts[0][keys[0]])):
+        obj = {}
+        for v in all_local_stats_dicts[0].items():
+            obj.update({v[0]:v[1][i]})
+        a_dict.append(obj)
+
     ut.log(f'\nremote_4 AFTER  All remote input local stats: \n{str(a_dict)} ', args["state"])
 
     # Block of code to print just global stats
@@ -361,6 +361,7 @@ def remote_4(args):
         values = [label, global_dict_list[index], a_dict[index]]
         my_dict = {key: value for key, value in zip(keys2, values)}
         dict_list.append(my_dict)
+
 
     computation_output = {
         "output": {
