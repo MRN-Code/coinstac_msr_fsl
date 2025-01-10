@@ -14,10 +14,16 @@ import utils as ut
 def remote_0(args):
     input_list = args["input"]
     site_ids = sorted(list(input_list.keys()))
+    userID = list(site_ids[0])
+
     site_covar_list = [
         f'{label}' for index, label in enumerate(site_ids)
         if index
-    ]  
+    ]
+
+    columns_to_normalize = set()
+    for userID in site_ids:
+        columns_to_normalize.update(columns_to_normalize.union(input_list[userID]["columns_to_normalize"]))
 
     site_id=site_ids[0]
     tol = input_list[site_id]["tol"]
@@ -25,6 +31,7 @@ def remote_0(args):
 
     output_dict = {
         "site_covar_list": site_covar_list,
+        "columns_to_normalize": list(columns_to_normalize),
         "computation_phase": "remote_0"
     }
 

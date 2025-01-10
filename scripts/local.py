@@ -19,14 +19,14 @@ from local_ancillary import gather_local_stats, add_site_covariates
 import utils as ut
 
 from scripts.regression import sum_squared_error, y_estimate
-from scripts.local_ancillary import gather_local_stats, add_site_covariates, get_cost
-
+import scripts.local_ancillary as lc
 
 def local_0(args):
     input_list = args["input"]
     lamb = input_list["lambda"]
 
     (X, y) = parsers.fsl_parser(args)
+    columns_to_normalize = lc.check_cols_to_normalize(X)
 
     tol = input_list["tol"]
     eta = input_list["eta"]
@@ -47,6 +47,8 @@ def local_0(args):
     computation_output_dict = {
         "output": output_dict,
         "cache": cache_dict,
+        "eta": eta,
+        "columns_to_normalize": columns_to_normalize,
     }
 
     return json.dumps(computation_output_dict)
@@ -56,13 +58,20 @@ def local_1(args):
     """Read data from the local sites, perform local regressions and send
     local statistics to the remote site"""
 
+    input_list = args["input"]
+    ut.log(input_list, args['state'])
+
     X = pd.read_json(args["cache"]["covariates"], orient='records')
+
+    X = lc.normalize_columns(X, input_list["columns_to_normalize"])
+    ut.log(f'\n\nNormalizing the following column values to their z-scores: {input_list["columns_to_normalize"]} \n ', args['state'])
+
     y = pd.read_json(args["cache"]["dependents"], orient='records')
     y_labels = list(y.columns)
 
-    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
+    beta_vector, local_stats_list, meanY_vector, lenY_vector, site = lc.gather_local_stats(X, y, site)
     ut.log(f'\nlocal stats list: {str(local_stats_list)} ', args["state"])
-    augmented_X = add_site_covariates(args, X)
+    augmented_X = lc.add_site_covariates(args, X)
 
     beta_vec_size = augmented_X.shape[1]
     X_labels = list(augmented_X.columns)
@@ -121,7 +130,7 @@ def local_2(args):
         if not mask_flag[i]:
             gradient[i, :] = (
                 1 / len(X)) * np.dot(biased_X.T, np.dot(biased_X, w_) - y_)
-        cost[i] = get_cost(y_actual=y[i], y_predicted=np.dot(biased_X, w_))
+        cost[i] = lc.get_cost(y_actual=y[i], y_predicted=np.dot(biased_X, w_))
 
     output_dict = {
         "local_grad": gradient.tolist(),
