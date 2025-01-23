@@ -75,10 +75,8 @@ def remote_1(args):
     ]
 
     #Update initial weights based on the local beta's
-    local_X_labels=['const']
-    local_X_labels.extend(args['cache']['X_labels'])
     augmented_X_labels=input_list[first_user_id]['augmented_X_labels']
-    for label_idx, curr_label in enumerate(local_X_labels):
+    for label_idx, curr_label in enumerate(X_labels):
         idx = augmented_X_labels.index(curr_label)
         wp[:, idx] = mean_local_betas[:, label_idx]
 
@@ -202,7 +200,6 @@ def remote_2(args):
             "iter_flag": iter_flag,
             "X_labels": args["cache"]["X_labels"],
             "prev_cost": prev_cost,
-            "X_labels": args["cache"]["X_labels"],
             #"avg_beta_vector": wc.tolist() #TODO delete this entry.. added for debugging
         }
 

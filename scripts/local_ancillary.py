@@ -50,8 +50,10 @@ def gather_local_stats(X, y):
         ]
         local_stats_dict = {key: value for key, value in zip(keys, values)}
         local_stats_list.append(local_stats_dict)
+    
+    beta_vector = [l.tolist() for l in local_params]
 
-    return meanY_vector, lenY_vector, local_stats_list
+    return meanY_vector, lenY_vector, local_stats_list, beta_vector
 
 
 def add_site_covariates(args, X):

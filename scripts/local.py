@@ -73,17 +73,18 @@ def local_1(args):
     y = pd.read_json(args["cache"]["dependents"], orient="records")
     y_labels = list(y.columns)
 
-    meanY_vector, lenY_vector, local_stats_list = (
+    meanY_vector, lenY_vector, local_stats_list, beta_vector = (
         lc.gather_local_stats(X, y)
     )
     ut.log(f"\nlocal stats list: {str(local_stats_list)} ", args["state"])
     augmented_X = lc.add_site_covariates(args, X)
 
     beta_vec_size = augmented_X.shape[1]
-    X_labels = list(augmented_X.columns)
+    X_labels = list(X.columns)
 
     output_dict = {
         "beta_vec_size": beta_vec_size,
+        "beta_vector_local": beta_vector,
         "X_labels": X_labels,
         "augmented_X_labels": list(augmented_X.columns),
         "number_of_regressions": len(y_labels),
